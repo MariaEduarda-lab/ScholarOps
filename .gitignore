@@ -1,0 +1,19 @@
+# Áreas reservadas a dados pessoais, documentos e exportações locais.
+# Mantenha apenas exemplos sintéticos versionados em dados/exemplos/.
+dados/reais/
+dados/brutos/
+documentos-candidatos/
+uploads/
+exports/
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Sistema/editor
+.DS_Store
+.idea/
+.vscode/
