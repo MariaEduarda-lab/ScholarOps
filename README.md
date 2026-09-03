@@ -31,6 +31,7 @@ Use ainda:
 
 - [Registro de decisões](docs/05-governanca/registro-de-decisoes.md) para documentar escolhas importantes;
 - [Glossário](docs/glossario.md) para padronizar termos do processo;
+- [Bases sintéticas de documentos](dados/sinteticos/README.md) para testar os três processos sem usar dados pessoais reais;
 - [Ficha de candidato fictício](dados/exemplos/candidato-ficticio.md) somente para testes iniciais, sem dados pessoais reais.
 
 ## Estrutura
