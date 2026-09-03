@@ -20,11 +20,12 @@ Preencha os documentos na ordem abaixo. Substitua os campos entre `[colchetes]`,
 | Etapa | Documento | Resultado esperado |
 |---|---|---|
 | 1 | [Briefing do projeto](docs/01-descoberta/briefing.md) | Problema, usuários, escopo, resultados e restrições alinhados |
-| 2 | [AS-IS — operações e analytics](docs/02-as-is/processo-atual.md) | Processo atual, gargalos, regras e linha de base mensurados |
-| 3 | [Inventário de documentos e dados](docs/02-as-is/inventario-documentos-dados.md) | Entradas, campos, qualidade e sensibilidade conhecidos |
-| 4 | [Plano de pesquisa](docs/04-pesquisa/plano-de-pesquisa.md) | Entrevistas e observações organizadas para validar hipóteses |
-| 5 | [Processo técnico TO-BE](docs/03-processo-tech/processo-tecnico.md) | Pipeline, arquitetura, revisão humana e avaliação definidos |
-| 6 | [Riscos e governança](docs/05-governanca/riscos-e-governanca.md) | Salvaguardas de privacidade, segurança, justiça e operação |
+| 2 | [Mapeamento dos processos-alvo](docs/01-descoberta/mapeamento.md) | Fluxos e matrizes documentais do Inteli, Bom Aluno BH e Marista descritos e verificados |
+| 3 | [AS-IS — operações e analytics](docs/02-as-is/processo-atual.md) | Processo atual, gargalos, regras e linha de base mensurados |
+| 4 | [Inventário de documentos e dados](docs/02-as-is/inventario-documentos-dados.md) | Entradas, campos, qualidade e sensibilidade conhecidos |
+| 5 | [Plano de pesquisa](docs/04-pesquisa/plano-de-pesquisa.md) | Entrevistas e observações organizadas para validar hipóteses |
+| 6 | [Processo técnico TO-BE](docs/03-processo-tech/processo-tecnico.md) | Pipeline, arquitetura, revisão humana e avaliação definidos |
+| 7 | [Riscos e governança](docs/05-governanca/riscos-e-governanca.md) | Salvaguardas de privacidade, segurança, justiça e operação |
 
 Use ainda:
 
