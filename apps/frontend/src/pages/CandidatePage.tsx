@@ -1,15 +1,20 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowLeft, CalendarClock, CheckCircle2, Download, ExternalLink, FileText, Mail, MapPin, MessageCircle, Phone, ShieldAlert, UserRound } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { getCandidateForInstitution } from '../data/mock-data'
-import { Avatar, EmptyState, ProgressBar, StatusBadge } from '../components/ui'
+import { Avatar, EmptyState, LoadingState, ProgressBar, StatusBadge } from '../components/ui'
 import { useInstitution } from '../context/useInstitution'
+import { scholarApi } from '../services/api'
 
 export function CandidatePage() {
   const { id = '' } = useParams()
   const [tab, setTab] = useState<'summary' | 'documents' | 'history'>('summary')
   const { institution } = useInstitution()
-  const candidate = getCandidateForInstitution(id, institution.id)
+  const { data: candidate, isLoading } = useQuery({
+    queryKey: ['candidate', institution.id, id],
+    queryFn: () => scholarApi.getCandidate(id, institution.id),
+  })
+  if (isLoading) return <LoadingState label="Carregando o dossiê…" />
   if (!candidate) return <EmptyState title="Candidatura indisponível" description="Ela não existe ou não pertence à instituição vinculada ao seu perfil." />
   const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   return <>

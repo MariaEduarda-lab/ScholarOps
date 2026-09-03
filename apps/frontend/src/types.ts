@@ -44,6 +44,7 @@ export interface Candidate {
   monthlyIncome: number
   perCapitaIncome: number
   documents: DocumentRecord[]
+  documentCount?: number
   pendingCount: number
   inconsistentCount: number
   attentionCount: number
@@ -58,4 +59,14 @@ export interface ProcessMilestone {
   title: string
   description: string
   state: 'done' | 'current' | 'next'
+}
+
+export interface ProcessMetrics {
+  total: number
+  awaiting: number
+  pending: number
+  review: number
+  ready: number
+  approved: number
+  rejected: number
 }

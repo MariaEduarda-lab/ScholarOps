@@ -1,13 +1,19 @@
 import { AlertCircle, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock3, FileWarning, UsersRound } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { PageHeading } from '../components/ui'
-import { getMetricsForInstitution } from '../data/mock-data'
+import { EmptyState, LoadingState, PageHeading } from '../components/ui'
 import { useInstitution } from '../context/useInstitution'
+import { scholarApi } from '../services/api'
 const pieColors = ['#17365f', '#ef716d', '#e8ad55']
 
 export function MetricsPage() {
   const { institution } = useInstitution()
-  const metrics = getMetricsForInstitution(institution.id)
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['metrics', institution.id],
+    queryFn: () => scholarApi.getMetrics(institution.id),
+  })
+  if (isLoading) return <LoadingState label="Calculando os indicadores…" />
+  if (!metrics) return <EmptyState title="Métricas indisponíveis" description="Tente novamente em alguns instantes." />
   const stages = [
     { stage: 'Inscritas', amount: metrics.total, fill: '#17365f' },
     { stage: 'Triadas', amount: Math.max(metrics.total - metrics.awaiting, 0), fill: '#315b8a' },

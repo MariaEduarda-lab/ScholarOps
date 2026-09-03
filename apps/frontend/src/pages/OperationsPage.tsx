@@ -1,21 +1,42 @@
 import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, Check, CheckCircle2, FileText, Mail, MessageCircle, RotateCcw, ShieldAlert, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { getCandidatesForInstitution } from '../data/mock-data'
-import { Avatar, PageHeading, ProgressBar, StatusBadge } from '../components/ui'
+import { Avatar, EmptyState, LoadingState, PageHeading, ProgressBar, StatusBadge } from '../components/ui'
 import { useInstitution } from '../context/useInstitution'
+import { scholarApi } from '../services/api'
 
 type Decision = 'Aprovar para entrevista' | 'Solicitar revisão' | 'Não encaminhar'
 
 export function OperationsPage() {
   const { institution } = useInstitution()
-  const queue = getCandidatesForInstitution(institution.id).filter((candidate) => candidate.attentionCount > 0 || candidate.pendingCount > 0).slice(0, 12)
+  const { data, isLoading } = useQuery({
+    queryKey: ['review-queue', institution.id],
+    queryFn: () => scholarApi.listCandidates(institution.id, 50),
+  })
   const [current, setCurrent] = useState(0)
   const [decision, setDecision] = useState<Decision | null>(null)
   const [reason, setReason] = useState('')
   const [completed, setCompleted] = useState(0)
-  const candidate = queue[current % queue.length]
-  const confirmDecision = () => { if (!reason.trim()) return; setDecision(null); setReason(''); setCompleted((value) => value + 1); setCurrent((value) => value + 1) }
+  const queue = (data?.items ?? []).filter((candidate) => candidate.attentionCount > 0 || candidate.pendingCount > 0).slice(0, 12)
+  const candidate = current < queue.length ? queue[current] : undefined
+  const decisionMutation = useMutation({
+    mutationFn: ({ selectedDecision, justification }: { selectedDecision: Decision; justification: string }) =>
+      scholarApi.createDecision(candidate!.id, institution.id, { decision: selectedDecision, reason: justification }),
+    onSuccess: () => {
+      setDecision(null)
+      setReason('')
+      setCompleted((value) => value + 1)
+      setCurrent((value) => value + 1)
+    },
+  })
+  const confirmDecision = () => {
+    if (!reason.trim() || !decision || !candidate) return
+    decisionMutation.mutate({ selectedDecision: decision, justification: reason })
+  }
+
+  if (isLoading) return <LoadingState label="Preparando a fila institucional…" />
+  if (!candidate) return <EmptyState title="Fila concluída" description="Não há candidaturas pendentes de revisão neste momento." />
 
   return <>
     <PageHeading eyebrow={`${institution.shortName.toUpperCase()} · CENTRAL DE ANÁLISE`} title="Uma candidatura por vez" description={`Fila exclusiva de ${institution.processName}. Revise sinais, consulte evidências e registre sua avaliação profissional.`} action={<div className="queue-progress"><span><strong>{completed}</strong> revisadas hoje</span><span>{Math.max(queue.length - completed, 0)} na fila</span></div>} />
