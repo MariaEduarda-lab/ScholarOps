@@ -10,8 +10,19 @@ exports/
 .env
 .env.*
 !.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 *.pem
 *.key
+
+# Artefatos das aplicações
+apps/frontend/dist/
+apps/frontend/node_modules/
 
 # Sistema/editor
 .DS_Store

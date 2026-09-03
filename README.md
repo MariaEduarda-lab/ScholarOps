@@ -35,6 +35,23 @@ Use ainda:
 - [Bases sintéticas de documentos](dados/sinteticos/README.md) para testar os três processos sem usar dados pessoais reais;
 - [Ficha de candidato fictício](dados/exemplos/candidato-ficticio.md) somente para testes iniciais, sem dados pessoais reais.
 
+## Aplicações
+
+O protótipo do frontend está em `apps/frontend`. Para executá-lo:
+
+```bash
+cd apps/frontend
+npm install
+npm run dev
+```
+
+O ambiente Python do futuro backend fica na `.venv` da raiz. Consulte `apps/backend/README.md` e ative-o com:
+
+```bash
+source .venv/bin/activate
+python -m pip install -r apps/backend/requirements-dev.txt
+```
+
 ## Estrutura
 
 ```text

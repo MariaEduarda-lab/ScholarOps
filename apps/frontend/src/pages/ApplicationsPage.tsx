@@ -1,0 +1,36 @@
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowRight, ChevronDown, Download, Search, SlidersHorizontal, UsersRound } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { delay, getCandidatesForInstitution } from '../data/mock-data'
+import { Avatar, EmptyState, LoadingState, PageHeading, ProgressBar, StatusBadge } from '../components/ui'
+import { useInstitution } from '../context/useInstitution'
+
+export function ApplicationsPage() {
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const { institution } = useInstitution()
+  const { data, isLoading } = useQuery({
+    queryKey: ['candidates', institution.id],
+    queryFn: () => delay(getCandidatesForInstitution(institution.id).slice(0, 48)),
+  })
+  const filtered = useMemo(() => (data ?? []).filter((candidate) => {
+    const matchesSearch = `${candidate.name} ${candidate.id}`.toLowerCase().includes(search.toLowerCase())
+    return matchesSearch && (status === 'all' || candidate.status === status)
+  }), [data, search, status])
+
+  return <>
+    <PageHeading eyebrow={institution.shortName.toUpperCase()} title="Hub de inscrições" description={`Candidaturas de ${institution.processName}. Seu acesso é restrito à instituição vinculada ao seu perfil.`} action={<button className="button button--secondary"><Download size={16} />Exportar lista</button>} />
+    <section className="quick-stats">
+      <article><span className="metric-icon metric-icon--navy"><UsersRound /></span><div><small>NESTA DEMONSTRAÇÃO</small><strong>{data?.length ?? '—'}</strong><span>candidaturas carregadas</span></div></article>
+      <article><span className="metric-dot metric-dot--coral" /><div><small>PRECISAM DE ATENÇÃO</small><strong>{data?.filter((item) => item.attentionCount > 0).length ?? '—'}</strong><span>para revisão profissional</span></div></article>
+      <article><span className="metric-dot metric-dot--gold" /><div><small>COM PENDÊNCIAS</small><strong>{data?.filter((item) => item.pendingCount > 0).length ?? '—'}</strong><span>aguardam complementação</span></div></article>
+      <article><span className="metric-dot metric-dot--green" /><div><small>APTAS</small><strong>{data?.filter((item) => item.status === 'Apto para entrevista').length ?? '—'}</strong><span>para próxima etapa</span></div></article>
+    </section>
+    <section className="card list-card">
+      <div className="filters filters--institution"><div className="search-input"><Search /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou número…" aria-label="Buscar candidatura" /></div><label className="select-wrap"><SlidersHorizontal /><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filtrar por situação"><option value="all">Todas as situações</option><option>Aguardando análise</option><option>Em revisão</option><option>Documentação pendente</option><option>Apto para entrevista</option></select><ChevronDown /></label></div>
+      <div className="list-summary"><span><strong>{filtered.length}</strong> candidaturas encontradas</span><span>Dados sintéticos para pesquisa e desenvolvimento</span></div>
+      {isLoading ? <LoadingState /> : filtered.length === 0 ? <EmptyState title="Nenhuma candidatura encontrada" description="Altere os filtros ou tente outro termo de busca." /> : <div className="candidate-table-wrap"><table className="candidate-table"><thead><tr><th>Candidata(o)</th><th>Processo</th><th>Situação</th><th>Documentação</th><th>Atualização</th><th><span className="sr-only">Abrir</span></th></tr></thead><tbody>{filtered.map((candidate) => <tr key={candidate.id}><td><Link className="candidate-cell" to={`/app/inscricoes/${candidate.id}`}><Avatar initials={candidate.initials} /><span><strong>{candidate.name}</strong><small>{candidate.id}</small></span></Link></td><td><strong>{institution.processName}</strong><small>{candidate.edition}</small></td><td><StatusBadge status={candidate.status} /></td><td><ProgressBar value={candidate.progress} /><small>{candidate.documents.length} documentos</small></td><td><span>{candidate.updatedAt}</span></td><td><Link className="icon-button" aria-label={`Abrir candidatura de ${candidate.name}`} to={`/app/inscricoes/${candidate.id}`}><ArrowRight /></Link></td></tr>)}</tbody></table></div>}
+    </section>
+  </>
+}
