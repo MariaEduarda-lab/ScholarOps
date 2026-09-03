@@ -29,6 +29,7 @@ Preencha os documentos na ordem abaixo. Substitua os campos entre `[colchetes]`,
 
 Use ainda:
 
+- [Documentação de usabilidade e front-end](docs/02-as-is/usabilidade-frontend.md) para consultar os wireframes, fluxos e critérios iniciais da interface;
 - [Registro de decisões](docs/05-governanca/registro-de-decisoes.md) para documentar escolhas importantes;
 - [Glossário](docs/glossario.md) para padronizar termos do processo;
 - [Bases sintéticas de documentos](dados/sinteticos/README.md) para testar os três processos sem usar dados pessoais reais;
