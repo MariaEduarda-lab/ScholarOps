@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { AlertTriangle, ArrowRight, Check, CheckCircle2, FileText, Mail, MessageCircle, RotateCcw, ShieldAlert, X } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Check, CheckCircle2, FileText, LoaderCircle, Mail, MessageCircle, RotateCcw, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Avatar, EmptyState, LoadingState, PageHeading, ProgressBar, StatusBadge } from '../components/ui'
 import { useInstitution } from '../context/useInstitution'
@@ -20,6 +20,9 @@ export function OperationsPage() {
   const [completed, setCompleted] = useState(0)
   const queue = (data?.items ?? []).filter((candidate) => candidate.attentionCount > 0 || candidate.pendingCount > 0).slice(0, 12)
   const candidate = current < queue.length ? queue[current] : undefined
+  const analysisMutation = useMutation({
+    mutationFn: () => scholarApi.runAnalysis(candidate!.id, institution.id),
+  })
   const decisionMutation = useMutation({
     mutationFn: ({ selectedDecision, justification }: { selectedDecision: Decision; justification: string }) =>
       scholarApi.createDecision(candidate!.id, institution.id, { decision: selectedDecision, reason: justification }),
@@ -28,6 +31,7 @@ export function OperationsPage() {
       setReason('')
       setCompleted((value) => value + 1)
       setCurrent((value) => value + 1)
+      analysisMutation.reset()
     },
   })
   const confirmDecision = () => {
@@ -37,13 +41,31 @@ export function OperationsPage() {
 
   if (isLoading) return <LoadingState label="Preparando a fila institucional…" />
   if (!candidate) return <EmptyState title="Fila concluída" description="Não há candidaturas pendentes de revisão neste momento." />
+  const assistedSummary = analysisMutation.data?.result.summary ?? candidate.summary
 
   return <>
     <PageHeading eyebrow={`${institution.shortName.toUpperCase()} · CENTRAL DE ANÁLISE`} title="Uma candidatura por vez" description={`Fila exclusiva de ${institution.processName}. Revise sinais, consulte evidências e registre sua avaliação profissional.`} action={<div className="queue-progress"><span><strong>{completed}</strong> revisadas hoje</span><span>{Math.max(queue.length - completed, 0)} na fila</span></div>} />
     <div className="review-layout">
       <main className="review-card card"><header className="review-profile"><div><Avatar initials={candidate.initials} large /><span><small>{candidate.id}</small><h2>{candidate.name}</h2><p>{candidate.institution} · {candidate.edition}</p></span></div><StatusBadge status={candidate.status} /></header>
         <div className="review-progress"><span>Completude documental</span><ProgressBar value={candidate.progress} /></div>
-        <section className="review-summary"><span className="eyebrow">RESUMO PARA ANÁLISE</span><p>{candidate.summary}</p><Link to={`/app/inscricoes/${candidate.id}`}>Abrir candidatura completa <ArrowRight size={15} /></Link></section>
+        <section className="review-summary">
+          <div className="review-section-title">
+            <span className="eyebrow">RESUMO PARA ANÁLISE</span>
+            <button
+              className="button button--soft ai-test-button"
+              disabled={analysisMutation.isPending}
+              onClick={() => analysisMutation.mutate()}
+              type="button"
+            >
+              {analysisMutation.isPending ? <LoaderCircle className="spin" /> : <Sparkles />}
+              {analysisMutation.isPending ? 'Gerando…' : 'Testar análise IA'}
+            </button>
+          </div>
+          <p aria-live="polite">{assistedSummary}</p>
+          {analysisMutation.data && <p className="ai-demo-note">Resposta Lorem ipsum recebida e registrada no backend.</p>}
+          {analysisMutation.isError && <p className="ai-error-note" role="alert">Não foi possível chamar a API. Confirme se o backend está ativo na porta 8010.</p>}
+          <Link to={`/app/inscricoes/${candidate.id}`}>Abrir candidatura completa <ArrowRight size={15} /></Link>
+        </section>
         <section><div className="review-section-title"><span className="eyebrow">SINAIS IDENTIFICADOS</span><small>Confira antes de decidir</small></div><div className="review-signals">
           {candidate.inconsistentCount > 0 && <article className="signal signal--danger"><ShieldAlert /><div><strong>{candidate.inconsistentCount} inconsistência(s) encontrada(s)</strong><p>Há valores ou informações que não coincidem entre documentos.</p></div></article>}
           {candidate.pendingCount > 0 && <article className="signal signal--warning"><AlertTriangle /><div><strong>{candidate.pendingCount} pendência(s) documental(is)</strong><p>Alguns itens obrigatórios estão ausentes ou incompletos.</p></div></article>}

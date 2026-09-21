@@ -72,8 +72,19 @@ async def test_analysis_does_not_make_a_decision(client: AsyncClient) -> None:
         headers={"X-Institution-Id": "inteli"},
     )
     assert response.status_code == 201
-    assert response.json()["provider"] == "rules"
-    assert "decision" not in response.json()["result"]
+    body = response.json()
+    assert body["provider"] == "mock-lorem"
+    assert body["modelVersion"] == "mock-lorem-v1"
+    assert body["result"]["summary"].startswith("Lorem ipsum")
+    assert body["result"]["confidence"] == 0
+    assert "decision" not in body["result"]
+
+    history = await client.get(
+        "/api/v1/candidates/INT-TEST-0001/analysis",
+        headers={"X-Institution-Id": "inteli"},
+    )
+    assert history.status_code == 200
+    assert history.json()[0]["id"] == body["id"]
 
 
 async def test_decision_requires_reason(client: AsyncClient) -> None:

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, CalendarClock, CheckCircle2, Download, ExternalLink, FileText, Mail, MapPin, MessageCircle, Phone, ShieldAlert, UserRound } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { AlertTriangle, ArrowLeft, CalendarClock, CheckCircle2, Download, ExternalLink, FileText, LoaderCircle, Mail, MapPin, MessageCircle, Phone, ShieldAlert, Sparkles, UserRound } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { Avatar, EmptyState, LoadingState, ProgressBar, StatusBadge } from '../components/ui'
 import { useInstitution } from '../context/useInstitution'
@@ -14,15 +14,39 @@ export function CandidatePage() {
     queryKey: ['candidate', institution.id, id],
     queryFn: () => scholarApi.getCandidate(id, institution.id),
   })
+  const analysisMutation = useMutation({
+    mutationFn: () => scholarApi.runAnalysis(id, institution.id),
+  })
   if (isLoading) return <LoadingState label="Carregando o dossiê…" />
   if (!candidate) return <EmptyState title="Candidatura indisponível" description="Ela não existe ou não pertence à instituição vinculada ao seu perfil." />
   const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const assistedSummary = analysisMutation.data?.result.summary ?? candidate.summary
   return <>
     <Link className="back-link" to="/app/inscricoes"><ArrowLeft size={16} />Voltar para inscrições</Link>
     <section className="candidate-header card"><div className="candidate-header__identity"><Avatar initials={candidate.initials} large /><div><span className="eyebrow">CANDIDATURA {candidate.id}</span><h1>{candidate.name}</h1><div className="meta-row"><span><MapPin />{candidate.city}</span><span><CalendarClock />Enviada em {new Date(`${candidate.submittedAt}T12:00`).toLocaleDateString('pt-BR')}</span></div></div></div><div className="candidate-header__actions"><StatusBadge status={candidate.status} /><button className="button button--secondary"><Download size={16} />Baixar relatório</button></div></section>
     <nav className="tabs" aria-label="Seções da candidatura"><button className={tab === 'summary' ? 'active' : ''} onClick={() => setTab('summary')}>Resumo da análise</button><button className={tab === 'documents' ? 'active' : ''} onClick={() => setTab('documents')}>Documentos <span>{candidate.documents.length}</span></button><button className={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>Histórico</button></nav>
     {tab === 'summary' && <div className="candidate-layout"><main className="stack-column">
-      <section className="card assistant-summary"><div className="card-heading"><div><span className="eyebrow">SÍNTESE ASSISTIDA</span><h2>Resumo para a entrevista</h2></div><span className="ai-label">Organizado automaticamente</span></div><p>{candidate.summary}</p><div className="responsibility-note"><ShieldAlert /><p><strong>Use como ponto de partida.</strong> Confira as evidências originais e converse com a família antes de qualquer decisão.</p></div></section>
+      <section className="card assistant-summary">
+        <div className="card-heading">
+          <div><span className="eyebrow">SÍNTESE ASSISTIDA</span><h2>Resumo para a entrevista</h2></div>
+          <div className="ai-actions">
+            <span className="ai-label">IA simulada</span>
+            <button
+              className="button button--soft ai-test-button"
+              disabled={analysisMutation.isPending}
+              onClick={() => analysisMutation.mutate()}
+              type="button"
+            >
+              {analysisMutation.isPending ? <LoaderCircle className="spin" /> : <Sparkles />}
+              {analysisMutation.isPending ? 'Gerando…' : 'Testar análise'}
+            </button>
+          </div>
+        </div>
+        <p aria-live="polite">{assistedSummary}</p>
+        {analysisMutation.data && <p className="ai-demo-note">Conteúdo Lorem ipsum retornado e registrado pelo backend para fins de demonstração.</p>}
+        {analysisMutation.isError && <p className="ai-error-note" role="alert">Não foi possível executar o teste. Confirme se o backend está ativo na porta 8010.</p>}
+        <div className="responsibility-note"><ShieldAlert /><p><strong>Use como ponto de partida.</strong> Confira as evidências originais e converse com a família antes de qualquer decisão.</p></div>
+      </section>
       <section className="card"><div className="card-heading"><div><span className="eyebrow">PONTOS PARA CONFERÊNCIA</span><h2>Principais insights</h2></div></div><div className="insights-list">{candidate.insights.map((insight, index) => <div key={insight} className={index === 0 && candidate.pendingCount ? 'warning' : index === 1 && candidate.inconsistentCount ? 'danger' : 'success'}>{index === 0 && candidate.pendingCount ? <AlertTriangle /> : index === 1 && candidate.inconsistentCount ? <ShieldAlert /> : <CheckCircle2 />}<div><strong>{insight}</strong><p>{index === 0 ? 'Confira os documentos marcados abaixo.' : index === 1 ? 'Compare formulário e arquivo original.' : 'Resultado da triagem; sujeito à validação.'}</p></div></div>)}</div></section>
       <section className="card"><div className="card-heading"><div><span className="eyebrow">DOCUMENTAÇÃO</span><h2>Itens que merecem atenção</h2></div><button className="link-button" onClick={() => setTab('documents')}>Ver todos</button></div><div className="document-list">{candidate.documents.filter((document) => document.status !== 'ok' || document.humanReview).slice(0, 5).map((document) => <article key={document.id}><span className="file-icon"><FileText /></span><div><strong>{document.label}</strong><small>{document.relationship} · confiança de {Math.round(document.confidence * 100)}%</small>{document.issue && <p>{document.issue}</p>}</div><StatusBadge status={document.status} /><button className="icon-button" aria-label={`Visualizar ${document.label}`}><ExternalLink /></button></article>)}</div></section>
     </main><aside className="stack-column">

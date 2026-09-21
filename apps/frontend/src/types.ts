@@ -70,3 +70,25 @@ export interface ProcessMetrics {
   approved: number
   rejected: number
 }
+
+export interface AnalysisFlag {
+  documentId: string
+  type: string
+  reason: string
+}
+
+export interface AnalysisRun {
+  id: string
+  candidateId: string
+  provider: string
+  modelVersion: string
+  status: string
+  result: {
+    summary: string
+    insights: string[]
+    flags: AnalysisFlag[]
+    confidence: number
+    requiresHumanReview: boolean
+  }
+  createdAt: string
+}

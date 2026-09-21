@@ -1,5 +1,5 @@
 import { delay, getCandidateForInstitution, getCandidatesForInstitution, getMetricsForInstitution } from '../data/mock-data'
-import type { Candidate, InstitutionId, ProcessMetrics } from '../types'
+import type { AnalysisRun, Candidate, InstitutionId, ProcessMetrics } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const mockFallbackEnabled = import.meta.env.VITE_ENABLE_MOCK_FALLBACK !== 'false'
@@ -91,8 +91,8 @@ export const scholarApi = {
     )
   },
 
-  runAnalysis(candidateId: string, institutionId: InstitutionId) {
-    return request(`/candidates/${encodeURIComponent(candidateId)}/analysis`, institutionId, { method: 'POST' })
+  runAnalysis(candidateId: string, institutionId: InstitutionId): Promise<AnalysisRun> {
+    return request<AnalysisRun>(`/candidates/${encodeURIComponent(candidateId)}/analysis`, institutionId, { method: 'POST' })
   },
 
   patchCandidate(candidateId: string, institutionId: InstitutionId, changes: Partial<Candidate>) {

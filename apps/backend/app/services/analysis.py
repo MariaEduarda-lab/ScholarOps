@@ -48,8 +48,41 @@ class RulesAnalysisProvider:
         )
 
 
+class LoremIpsumAnalysisProvider:
+    """Provedor de demonstração usado enquanto não há um modelo de IA conectado."""
+
+    name = "mock-lorem"
+    version = "mock-lorem-v1"
+
+    def analyze(self, candidate: Candidate) -> AnalysisResult:
+        flags: list[dict[str, str]] = []
+        for document in candidate.documents:
+            if document.status != "ok" or document.human_review:
+                flags.append(
+                    {
+                        "documentId": document.id.rsplit(":", 1)[-1],
+                        "type": document.status,
+                        "reason": document.issue or "Revisão humana indicada pela regra documental.",
+                    }
+                )
+        return AnalysisResult(
+            summary=(
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor "
+                "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud "
+                "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            ),
+            insights=[
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
+            ],
+            flags=flags,
+            confidence=0.0,
+        )
+
+
 def run_analysis(db: Session, candidate: Candidate, provider: AnalysisProvider | None = None) -> AnalysisRun:
-    selected_provider = provider or RulesAnalysisProvider()
+    selected_provider = provider or LoremIpsumAnalysisProvider()
     result = selected_provider.analyze(candidate)
     run = AnalysisRun(
         candidate_id=candidate.id,

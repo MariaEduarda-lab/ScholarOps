@@ -10,7 +10,8 @@ Backend inicial do ScholarOps, construído com FastAPI, Pydantic e SQLAlchemy. E
 - ingestão por upload CSV/XLSX ou lote de linhas JSON;
 - métricas institucionais;
 - registro auditável de decisões humanas;
-- análise provisória baseada em regras;
+- análise mockada com Lorem ipsum, claramente identificada como demonstração;
+- sinais documentais provisórios baseados em regras;
 - contrato `AnalysisProvider` para conectar um modelo de IA no futuro;
 - documentação OpenAPI/Swagger automática.
 
@@ -23,15 +24,31 @@ Na raiz do repositório:
 ```bash
 source .venv/bin/activate
 cd apps/backend
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8010
 ```
 
 Acesse:
 
-- API: `http://127.0.0.1:8000`;
-- Swagger: `http://127.0.0.1:8000/docs`;
-- saúde da aplicação: `http://127.0.0.1:8000/health`;
-- conexão do banco: `http://127.0.0.1:8000/health/database`.
+- API: `http://127.0.0.1:8010`;
+- Swagger: `http://127.0.0.1:8010/docs`;
+- saúde da aplicação: `http://127.0.0.1:8010/health`;
+- conexão do banco: `http://127.0.0.1:8010/health/database`.
+
+### Preparar a base de demonstração
+
+Para garantir que as três instituições e todos os dados sintéticos estejam carregados:
+
+```bash
+python -m app.seed_demo
+```
+
+Para recriar do zero apenas a base SQLite local (decisões e análises de testes anteriores serão apagadas):
+
+```bash
+python -m app.seed_demo --reset
+```
+
+O reset é bloqueado automaticamente quando a conexão aponta para PostgreSQL/Supabase ou quando `ENVIRONMENT=production`.
 
 Em outro terminal, execute o frontend:
 
@@ -64,7 +81,7 @@ O Vite redireciona `/api` para o backend. Se a API estiver desligada, o frontend
 Exemplo de atualização parcial:
 
 ```bash
-curl -X PATCH http://127.0.0.1:8000/api/v1/candidates/INT-SYN-0001 \
+curl -X PATCH http://127.0.0.1:8010/api/v1/candidates/INT-SYN-0001 \
   -H "Content-Type: application/json" \
   -H "X-Institution-Id: inteli" \
   -d '{"phone":"(11) 99999-9999","familyMembers":4}'
@@ -110,7 +127,7 @@ class AnalysisProvider(Protocol):
     def analyze(self, candidate: Candidate) -> AnalysisResult: ...
 ```
 
-O retorno contém resumo, insights, sinais e confiança. Ele não contém uma decisão de bolsa. Cada execução é gravada em `analysis_runs` com provedor, versão e resultado, preservando rastreabilidade.
+Enquanto nenhum modelo estiver conectado, o provedor padrão `mock-lorem` devolve Lorem ipsum no resumo e nos insights. Os sinais documentais continuam vindo de regras determinísticas, e a confiança do conteúdo mockado é `0`. O retorno não contém uma decisão de bolsa. Cada execução é gravada em `analysis_runs` com provedor, versão e resultado, preservando rastreabilidade.
 
 ## Qualidade
 

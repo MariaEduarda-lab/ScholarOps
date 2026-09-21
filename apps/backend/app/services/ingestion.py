@@ -299,13 +299,14 @@ def ingest_rows(
 
 def seed_demo_database(db: Session) -> None:
     ensure_institutions(db)
-    if db.scalar(select(Candidate.id).limit(1)) is not None:
-        return
     files = sorted((PROJECT_DIR / "dados" / "sinteticos").glob("*_documentos_sinteticos.csv"))
     for file_path in files:
         rows = parse_csv_bytes(file_path.read_bytes())
         if not rows:
             continue
         institution_id = str(rows[0].get("instituicao") or "")
-        if institution_id in INSTITUTIONS:
+        institution_has_candidates = db.scalar(
+            select(Candidate.id).where(Candidate.institution_id == institution_id).limit(1)
+        )
+        if institution_id in INSTITUTIONS and institution_has_candidates is None:
             ingest_rows(db, institution_id, rows, source_type="seed", filename=file_path.name)
